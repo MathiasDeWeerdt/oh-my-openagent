@@ -53,6 +53,23 @@ describe("install-codex", () => {
     expect(repoRoot).toBe(wrapperRoot)
   })
 
+  test("#given importer nested five levels deep post-move #when resolving vendored repo root #then walks past the raised ancestor cap", async () => {
+    // given
+    const root = await mkdtemp(join(tmpdir(), "omo-codex-deep-nesting-"))
+    await mkdir(join(root, "packages", "omo-codex", "plugin", ".codex-plugin"), { recursive: true })
+    await writeFile(join(root, "packages", "omo-codex", "plugin", ".codex-plugin", "plugin.json"), "{}")
+    const importerDir = join(root, "packages", "omo-opencode", "src", "cli", "install-codex")
+    await mkdir(importerDir, { recursive: true })
+
+    // when
+    const repoRootFromImporter = findRepoRootFromImporter(importerDir)
+    const repoRoot = findRepoRoot({ importerDir })
+
+    // then
+    expect(repoRootFromImporter).toBe(root)
+    expect(repoRoot).toBe(root)
+  })
+
   test("#given wrapper root env #when resolving vendored repo root #then prefers wrapper package root", async () => {
     // given
     const platformPackageRoot = await mkdtemp(join(tmpdir(), "omo-codex-platform-package-"))
